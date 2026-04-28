@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Joseph Paguirigan — Design Engineer</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black:      #000000;
+    --white:      #ffffff;
+    --red:        #E8312A;
+    --grey-dark:  #111111;
+    --grey-mid:   #666666;
+    --grey-light: #f2f2f2;
+    --font: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --max: 1440px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font);
+    background: var(--white);
+    color: var(--black);
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* ─── Custom Cursor ──────────────────────────────────── */
+  .cursor {
+    position: fixed;
+    width: 8px; height: 8px;
+    background: var(--red);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%,-50%);
+    transition: transform .15s ease, opacity .2s;
+  }
+  .cursor-ring {
+    position: fixed;
+    width: 36px; height: 36px;
+    border: 1px solid rgba(232,49,42,.6);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%,-50%);
+    transition: width .25s ease, height .25s ease, border-color .25s;
+  }
+  body:has(a:hover) .cursor-ring,
+  body:has(.work-item:hover) .cursor-ring { width: 56px; height: 56px; border-color: var(--red); }
+
+  /* ─── Progress Bar ───────────────────────────────────── */
+  #progress {
+    position: fixed; top: 0; left: 0;
+    height: 2px; width: 0%;
+    background: var(--red);
+    z-index: 500;
+    transition: width .08s linear;
+  }
+
+  /* ─── Navigation ─────────────────────────────────────── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 200;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 28px 56px;
+    mix-blend-mode: difference;
+  }
+  .nav-logo {
+    font-size: 13px; font-weight: 700;
+    letter-spacing: .18em; text-transform: uppercase;
+    color: var(--white); text-decoration: none;
+  }
+  .nav-links { display: flex; gap: 40px; list-style: none; }
+  .nav-links a {
+    font-size: 10px; font-weight: 600;
+    letter-spacing: .22em; text-transform: uppercase;
+    color: var(--white); text-decoration: none;
+    opacity: .55; transition: opacity .2s;
+  }
+  .nav-links a:hover { opacity: 1; }
+
+  /* ─── HERO ───────────────────────────────────────────── */
+  .hero {
+    position: relative; height: 100vh;
+    display: flex; flex-direction: column;
+    justify-content: flex-end;
+    padding: 0 56px 88px;
+    overflow: hidden;
+  }
+
+  /* subtle column grid overlay */
+  .hero-grid {
+    position: absolute; inset: 0;
+    display: grid; grid-template-columns: repeat(12, 1fr);
+    gap: 1px; pointer-events: none;
+  }
+  .hero-grid span { border-right: 1px solid rgba(0,0,0,.04); }
+
+  /* large ghost text parallax layer */
+  .hero-ghost {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: clamp(160px, 22vw, 360px);
+    font-weight: 900; line-height: 1;
+    letter-spacing: -.06em;
+    text-transform: uppercase;
+    color: rgba(0,0,0,.04);
+    white-space: nowrap;
+    pointer-events: none;
+    will-change: transform;
+  }
+
+  /* vertical red rule */
+  .hero-rule {
+    position: absolute;
+    top: 18%; right: 10%;
+    width: 1px; height: 220px;
+    background: var(--red);
+    opacity: .55;
+    will-change: transform;
+  }
+  /* vertical label */
+  .hero-label-v {
+    position: absolute;
+    top: 22%; right: 13%;
+    font-size: 10px; font-weight: 600;
+    letter-spacing: .22em; text-transform: uppercase;
+    color: rgba(0,0,0,.18);
+    writing-mode: vertical-rl;
+    will-change: transform;
+  }
+  /* circle accent */
+  .hero-circle {
+    position: absolute;
+    bottom: 28%; right: 7%;
+    width: 140px; height: 140px;
+    border: 1px solid rgba(232,49,42,.25);
+    border-radius: 50%;
+    will-change: transform;
+  }
+
+  .hero-eyebrow {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: .28em; text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 28px;
+    opacity: 0;
+    animation: fadeUp .7s .3s forwards;
+  }
+
+  .hero-title {
+    font-size: clamp(72px, 11vw, 190px);
+    font-weight: 900; line-height: .88;
+    letter-spacing: -.04em; text-transform: uppercase;
+    color: var(--black);
+    will-change: transform;
+    opacity: 0;
+    animation: fadeUp .8s .5s forwards;
+  }
+  .hero-title .red { color: var(--red); }
+
+  .hero-footer {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    margin-top: 52px;
+    opacity: 0; animation: fadeUp .7s .85s forwards;
+  }
+  .hero-desc {
+    font-size: 16px; line-height: 1.65; font-weight: 300;
+    color: rgba(0,0,0,.5); max-width: 380px;
+  }
+  .hero-cta {
+    display: flex; align-items: center; gap: 14px;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: .22em; text-transform: uppercase;
+    color: var(--black); text-decoration: none;
+  }
+  .hero-cta .arrow {
+    display: block; width: 48px; height: 1px;
+    background: var(--red); position: relative;
+    transition: width .3s;
+  }
+  .hero-cta .arrow::after {
+    content: '';
+    position: absolute; right: 0; top: -3px;
+    border: 3px solid transparent;
+    border-left: 5px solid var(--red);
+  }
+  .hero-cta:hover .arrow { width: 72px; }
+
+  /* scroll worm */
+  .scroll-worm {
+    position: absolute; bottom: 40px; left: 50%;
+    transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    opacity: 0; animation: fadeUp .6s 1.2s forwards;
+  }
+  .scroll-worm-line {
+    width: 1px; height: 44px;
+    background: linear-gradient(to bottom, var(--red), transparent);
+    animation: pulse 2.2s infinite;
+  }
+  .scroll-worm-text {
+    font-size: 8px; letter-spacing: .28em; text-transform: uppercase;
+    color: rgba(0,0,0,.3);
+  }
+
+  /* ─── SECTION COMMON ─────────────────────────────────── */
+  .section-wrap {
+    position: relative;
+    padding: 130px 56px;
+  }
+  .section-inner { max-width: var(--max); margin: 0 auto; }
+
+  .eyebrow {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: .28em; text-transform: uppercase;
+    color: var(--red);
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 72px;
+  }
+  .eyebrow::after {
+    content: ''; flex: 0 0 64px; height: 1px;
+    background: rgba(0,0,0,.15);
+  }
+
+  .section-heading {
+    font-size: clamp(48px, 7vw, 112px);
+    font-weight: 900; line-height: .92;
+    letter-spacing: -.04em; text-transform: uppercase;
+    color: var(--black);
+  }
+
+  /* ─── ABOUT (dark accent panel) ─────────────────────── */
+  .about-wrap {
+    background: var(--black); color: var(--white);
+    padding: 130px 56px;
+  }
+  .about-grid {
+    max-width: var(--max); margin: 0 auto;
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 96px; align-items: start;
+  }
+  .about-wrap .eyebrow { color: var(--red); }
+  .about-wrap .eyebrow::after { background: rgba(255,255,255,.15); }
+  .about-heading {
+    font-size: clamp(44px, 6vw, 96px);
+    font-weight: 900; line-height: .92;
+    letter-spacing: -.04em; text-transform: uppercase;
+    color: var(--white);
+  }
+  .about-heading em { font-style: normal; color: var(--red); }
+
+  .about-text {
+    font-size: 17px; line-height: 1.75; font-weight: 300;
+    color: rgba(255,255,255,.6); margin-bottom: 36px;
+  }
+  .about-stats {
+    display: grid; grid-template-columns: repeat(3,1fr);
+    gap: 24px; margin-top: 48px;
+    border-top: 1px solid rgba(255,255,255,.12); padding-top: 44px;
+  }
+  .stat-big {
+    font-size: 52px; font-weight: 900;
+    letter-spacing: -.05em; line-height: 1;
+    color: var(--white);
+  }
+  .stat-big sup { font-size: .45em; color: var(--red); vertical-align: super; }
+  .stat-lbl {
+    font-size: 10px; font-weight: 600;
+    letter-spacing: .2em; text-transform: uppercase;
+    color: rgba(255,255,255,.35); margin-top: 8px;
+  }
+
+  /* ─── STACK ──────────────────────────────────────────── */
+  .stack-grid {
+    display: grid; grid-template-columns: repeat(4,1fr);
+    border: 1px solid rgba(0,0,0,.1);
+    margin-top: 80px;
+  }
+  .stack-cell {
+    padding: 44px 36px;
+    border-right: 1px solid rgba(0,0,0,.1);
+    transition: background .25s;
+  }
+  .stack-cell:last-child { border-right: none; }
+  .stack-cell:hover { background: rgba(0,0,0,.03); }
+  .stack-cat {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: .26em; text-transform: uppercase;
+    color: var(--red); margin-bottom: 24px;
+  }
+  .stack-tool {
+    font-size: 14px; font-weight: 400;
+    color: rgba(0,0,0,.65); line-height: 2.1;
+  }
+
+  /* ─── WORK ───────────────────────────────────────────── */
+  .work-wrap { background: var(--white); padding: 130px 56px; }
+  .work-wrap .eyebrow::after { background: rgba(0,0,0,.15); }
+  .work-wrap .section-heading { color: var(--black); }
+  .work-inner { max-width: var(--max); margin: 0 auto; }
+
+  .work-list { margin-top: 80px; }
+
+  .work-item {
+    display: grid; grid-template-columns: 72px 1fr 340px;
+    gap: 56px; padding: 64px 0;
+    border-top: 1px solid rgba(0,0,0,.1);
+    transition: border-color .3s;
+    cursor: default;
+  }
+  .work-item:hover { border-top-color: var(--red); }
+  .work-item:hover .work-num { color: var(--red); }
+
+  .work-num {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: .18em; color: rgba(0,0,0,.18);
+    padding-top: 6px; transition: color .3s;
+    font-variant-numeric: tabular-nums;
+  }
+  .work-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .work-tag {
+    font-size: 8px; font-weight: 700;
+    letter-spacing: .2em; text-transform: uppercase;
+    color: var(--red); padding: 4px 10px;
+    border: 1px solid rgba(232,49,42,.35);
+  }
+  .work-title {
+    font-size: clamp(30px, 3.5vw, 56px);
+    font-weight: 900; letter-spacing: -.04em;
+    text-transform: uppercase; line-height: .92;
+    margin-bottom: 22px; color: var(--black);
+  }
+  .work-desc {
+    font-size: 14px; line-height: 1.75; font-weight: 300;
+    color: rgba(0,0,0,.5); max-width: 500px;
+  }
+
+  .work-kpi {
+    border: 1px solid rgba(0,0,0,.1);
+    padding: 32px; margin-bottom: 20px;
+    background: var(--grey-light);
+  }
+  .kpi-label {
+    font-size: 8px; font-weight: 700;
+    letter-spacing: .24em; text-transform: uppercase;
+    color: var(--red); margin-bottom: 10px;
+  }
+  .kpi-value {
+    font-size: 44px; font-weight: 900;
+    letter-spacing: -.05em; line-height: 1; color: var(--black);
+  }
+  .kpi-note {
+    font-size: 11px; line-height: 1.6;
+    color: rgba(0,0,0,.4); margin-top: 10px;
+  }
+  .work-tools-lbl {
+    font-size: 8px; font-weight: 700;
+    letter-spacing: .22em; text-transform: uppercase;
+    color: rgba(0,0,0,.25); margin-bottom: 8px;
+  }
+  .work-tools-val {
+    font-size: 11px; letter-spacing: .05em;
+    color: rgba(0,0,0,.35); line-height: 1.9;
+  }
+
+  /* ─── PROCESS ────────────────────────────────────────── */
+  .process-wrap {
+    background: var(--grey-light); padding: 130px 56px;
+  }
+  .process-wrap .eyebrow::after { background: rgba(0,0,0,.15); }
+  .process-inner { max-width: var(--max); margin: 0 auto; }
+  .process-steps {
+    display: grid; grid-template-columns: repeat(5,1fr);
+    border: 1px solid rgba(0,0,0,.1);
+    margin-top: 80px;
+  }
+  .process-step {
+    padding: 48px 32px;
+    border-right: 1px solid rgba(0,0,0,.1);
+    position: relative; overflow: hidden;
+    background: var(--white);
+  }
+  .process-step:last-child { border-right: none; }
+  .process-step::after {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 2px; background: var(--red);
+    transform: scaleX(0); transform-origin: left;
+    transition: transform .4s ease;
+  }
+  .process-step:hover::after { transform: scaleX(1); }
+  .step-bg-num {
+    font-size: 72px; font-weight: 900;
+    letter-spacing: -.06em; color: rgba(0,0,0,.05);
+    line-height: 1; margin-bottom: 28px;
+  }
+  .step-name {
+    font-size: 13px; font-weight: 700;
+    letter-spacing: .06em; text-transform: uppercase;
+    margin-bottom: 12px; color: var(--black);
+  }
+  .step-desc {
+    font-size: 12px; line-height: 1.75; font-weight: 300;
+    color: rgba(0,0,0,.45);
+  }
+  .step-ai {
+    display: inline-block; margin-top: 14px;
+    font-size: 8px; font-weight: 700;
+    letter-spacing: .2em; text-transform: uppercase;
+    background: rgba(232,49,42,.1); color: var(--red);
+    padding: 3px 9px;
+  }
+
+  /* ─── PHILOSOPHY MARQUEE ─────────────────────────────── */
+  .marquee-wrap {
+    background: var(--red); overflow: hidden;
+    padding: 24px 0; border-top: none;
+  }
+  .marquee-track {
+    display: flex; gap: 0;
+    animation: marquee 20s linear infinite;
+    white-space: nowrap;
+  }
+  .marquee-item {
+    font-size: 13px; font-weight: 700;
+    letter-spacing: .18em; text-transform: uppercase;
+    color: var(--white); padding: 0 48px; flex-shrink: 0;
+  }
+  .marquee-dot { color: rgba(255,255,255,.4); }
+
+  /* ─── CONTACT ────────────────────────────────────────── */
+  .contact-wrap {
+    background: var(--red);
+    padding: 160px 56px;
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .contact-ghost {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    font-size: 28vw; font-weight: 900;
+    letter-spacing: -.06em; text-transform: uppercase;
+    color: rgba(0,0,0,.08);
+    white-space: nowrap; pointer-events: none; line-height: 1;
+    will-change: transform;
+  }
+  .contact-inner { position: relative; z-index: 1; }
+  .contact-eyebrow {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: .28em; text-transform: uppercase;
+    color: rgba(255,255,255,.75); margin-bottom: 36px;
+  }
+  .contact-heading {
+    font-size: clamp(56px, 9vw, 140px);
+    font-weight: 900; letter-spacing: -.05em;
+    text-transform: uppercase; line-height: .88;
+    margin-bottom: 56px; color: var(--white);
+  }
+  .contact-email {
+    display: inline-block;
+    font-size: clamp(16px, 2vw, 24px); font-weight: 300;
+    letter-spacing: .04em; color: var(--white);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255,255,255,.4);
+    padding-bottom: 6px;
+    transition: border-color .25s, opacity .25s;
+  }
+  .contact-email:hover { border-color: var(--white); opacity: .75; }
+
+  /* ─── FOOTER ─────────────────────────────────────────── */
+  footer {
+    background: var(--white);
+    padding: 36px 56px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 1px solid rgba(0,0,0,.1);
+  }
+  .footer-name {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: .2em; text-transform: uppercase;
+    color: var(--black);
+  }
+  .footer-note {
+    font-size: 10px; letter-spacing: .1em;
+    color: rgba(0,0,0,.3);
+  }
+
+  /* ─── REVEAL ANIMATIONS ──────────────────────────────── */
+  .reveal {
+    opacity: 0; transform: translateY(28px);
+    transition: opacity .7s ease, transform .7s ease;
+  }
+  .reveal.in { opacity: 1; transform: translateY(0); }
+  .d1 { transition-delay: .1s; }
+  .d2 { transition-delay: .2s; }
+  .d3 { transition-delay: .3s; }
+  .d4 { transition-delay: .4s; }
+
+  /* ─── KEYFRAMES ──────────────────────────────────────── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse {
+    0%,100% { opacity: .35; }
+    50%      { opacity: 1; }
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  /* ─── RESPONSIVE ─────────────────────────────────────── */
+  @media (max-width: 1100px) {
+    .work-item { grid-template-columns: 48px 1fr; }
+    .work-kpi-col { grid-column: 2; }
+    .stack-grid { grid-template-columns: repeat(2,1fr); }
+    .process-steps { grid-template-columns: repeat(2,1fr) 1fr; }
+    .about-grid { grid-template-columns: 1fr; gap: 48px; }
+  }
+  @media (max-width: 768px) {
+    nav { padding: 20px 24px; }
+    .hero, .section-wrap, .work-wrap, .about-wrap,
+    .process-wrap, .contact-wrap { padding-left: 24px; padding-right: 24px; }
+    footer { flex-direction: column; gap: 10px; text-align: center; }
+    .stack-grid { grid-template-columns: 1fr; }
+    .process-steps { grid-template-columns: 1fr; }
+    .work-item { grid-template-columns: 1fr; }
+    .work-num { display: none; }
+    .about-stats { grid-template-columns: repeat(3,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- Progress -->
+<div id="progress"></div>
+
+<!-- Cursor -->
+<div class="cursor" id="cur"></div>
+<div class="cursor-ring" id="curRing"></div>
+
+<!-- ══════════════════ NAV ══════════════════ -->
+<nav>
+  <a href="#" class="nav-logo">JP</a>
+  <ul class="nav-links">
+    <li><a href="#work">Work</a></li>
+    <li><a href="#process">Process</a></li>
+    <li><a href="#stack">Stack</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- ══════════════════ HERO ══════════════════ -->
+<div class="hero" id="hero">
+  <!-- 12-col grid overlay -->
+  <div class="hero-grid" aria-hidden="true">
+    <span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span>
+  </div>
+
+  <!-- Parallax decorations -->
+  <div class="hero-ghost"   data-speed="0.12" aria-hidden="true">DESIGN</div>
+  <div class="hero-rule"    data-speed="0.42" aria-hidden="true"></div>
+  <div class="hero-label-v" data-speed="0.30" aria-hidden="true">Joseph Paguirigan — 2025</div>
+  <div class="hero-circle"  data-speed="0.55" aria-hidden="true"></div>
+
+  <p class="hero-eyebrow">Design Engineer — AI-Native</p>
+
+  <h1 class="hero-title" id="heroTitle" data-speed="0.10">
+    Joseph<br>
+    <span class="red">Paguiri-</span><br>
+    gan.
+  </h1>
+
+  <div class="hero-footer">
+    <p class="hero-desc">
+      UX &amp; UI designer at the frontier of human–AI collaboration.
+      I research, design, prototype, and ship — powered by Claude,
+      Figma, and code.
+    </p>
+    <a href="#work" class="hero-cta">
+      View Work <span class="arrow"></span>
+    </a>
+  </div>
+
+  <div class="scroll-worm" aria-hidden="true">
+    <div class="scroll-worm-line"></div>
+    <span class="scroll-worm-text">Scroll</span>
+  </div>
+</div>
+
+<!-- ══════════════════ ABOUT ══════════════════ -->
+<div class="about-wrap" id="about">
+  <div class="about-grid">
+    <div>
+      <div class="eyebrow reveal">01 — About</div>
+      <h2 class="about-heading reveal d1">
+        Design<br>meets<br><em>Machine.</em>
+      </h2>
+    </div>
+    <div>
+      <p class="about-text reveal">
+        I design products that feel inevitable. Working at the intersection
+        of rigorous UX thinking and AI-augmented execution, I collapse the
+        distance between insight and interface — from user research to
+        shipped product in days, not months.
+      </p>
+      <p class="about-text reveal d1">
+        Fluent in Figma, Claude, GitHub, and just enough code to be
+        dangerous. I build design systems, synthesize research, and
+        prototype at the speed of thought. Call it design engineering,
+        call it vibe design — I call it the only way to work.
+      </p>
+      <div class="about-stats">
+        <div class="reveal">
+          <div class="stat-big">8<sup>+</sup></div>
+          <div class="stat-lbl">Years Experience</div>
+        </div>
+        <div class="reveal d1">
+          <div class="stat-big">40<sup>+</sup></div>
+          <div class="stat-lbl">Products Shipped</div>
+        </div>
+        <div class="reveal d2">
+          <div class="stat-big">3<sup>×</sup></div>
+          <div class="stat-lbl">Faster Delivery</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ STACK ══════════════════ -->
+<div class="section-wrap" id="stack">
+  <div class="section-inner">
+    <div class="eyebrow reveal">02 — Stack</div>
+    <h2 class="section-heading reveal d1">Tools &amp;<br>Methods.</h2>
+
+    <div class="stack-grid">
+      <div class="stack-cell reveal">
+        <div class="stack-cat">AI Tools</div>
+        <div class="stack-tool">Claude</div>
+        <div class="stack-tool">ChatGPT</div>
+        <div class="stack-tool">Midjourney</div>
+        <div class="stack-tool">Cursor</div>
+        <div class="stack-tool">v0 by Vercel</div>
+      </div>
+      <div class="stack-cell reveal d1">
+        <div class="stack-cat">Design</div>
+        <div class="stack-tool">Figma</div>
+        <div class="stack-tool">Framer</div>
+        <div class="stack-tool">ProtoPie</div>
+        <div class="stack-tool">After Effects</div>
+        <div class="stack-tool">Spline</div>
+      </div>
+      <div class="stack-cell reveal d2">
+        <div class="stack-cat">Engineering</div>
+        <div class="stack-tool">HTML / CSS</div>
+        <div class="stack-tool">React / JSX</div>
+        <div class="stack-tool">Tailwind</div>
+        <div class="stack-tool">GitHub</div>
+        <div class="stack-tool">Vercel</div>
+      </div>
+      <div class="stack-cell reveal d3">
+        <div class="stack-cat">Research</div>
+        <div class="stack-tool">User Interviews</div>
+        <div class="stack-tool">Usability Testing</div>
+        <div class="stack-tool">AI Synthesis</div>
+        <div class="stack-tool">Design Systems</div>
+        <div class="stack-tool">Jobs-to-be-Done</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ WORK ══════════════════ -->
+<div class="work-wrap" id="work">
+  <div class="work-inner">
+    <div class="eyebrow reveal">03 — Selected Work</div>
+    <h2 class="section-heading reveal d1">Case<br>Studies.</h2>
+
+    <div class="work-list">
+
+      <!-- ── Case 01 ── -->
+      <div class="work-item reveal">
+        <div class="work-num">01</div>
+        <div>
+          <div class="work-tags">
+            <span class="work-tag">Design System</span>
+            <span class="work-tag">AI-Augmented</span>
+          </div>
+          <h3 class="work-title">Meridian<br>Design System</h3>
+          <p class="work-desc">
+            Built a comprehensive design system for a Series B SaaS company —
+            200+ components, full Figma variable library, and auto-generated
+            documentation — delivered in 6 weeks using AI-assisted workflows.
+          </p>
+        </div>
+        <div class="work-kpi-col">
+          <div class="work-kpi">
+            <div class="kpi-label">Key Outcome</div>
+            <div class="kpi-value">6×</div>
+            <div class="kpi-note">Faster component handoff across 4 product teams. Design-to-code parity achieved in the first sprint.</div>
+          </div>
+          <div class="work-tools-lbl">Tools Used</div>
+          <div class="work-tools-val">Figma · Claude · GitHub · Storybook · React</div>
+        </div>
+      </div>
+
+      <!-- ── Case 02 ── -->
+      <div class="work-item reveal">
+        <div class="work-num">02</div>
+        <div>
+          <div class="work-tags">
+            <span class="work-tag">Conversational UI</span>
+            <span class="work-tag">Interaction Design</span>
+          </div>
+          <h3 class="work-title">AI Onboarding<br>Rethought</h3>
+          <p class="work-desc">
+            Redesigned the first-run experience for an AI analytics platform,
+            replacing a 12-step wizard with a conversational, intent-driven flow
+            that dynamically shaped itself around each user's context.
+          </p>
+        </div>
+        <div class="work-kpi-col">
+          <div class="work-kpi">
+            <div class="kpi-label">Key Outcome</div>
+            <div class="kpi-value">+44%</div>
+            <div class="kpi-note">Activation rate in A/B test. Time-to-first-value dropped from 8 minutes to under 2.</div>
+          </div>
+          <div class="work-tools-lbl">Tools Used</div>
+          <div class="work-tools-val">Figma · Framer · Claude · UserTesting</div>
+        </div>
+      </div>
+
+      <!-- ── Case 03 ── -->
+      <div class="work-item reveal">
+        <div class="work-num">03</div>
+        <div>
+          <div class="work-tags">
+            <span class="work-tag">Rapid Prototyping</span>
+            <span class="work-tag">Design Engineering</span>
+          </div>
+          <h3 class="work-title">48-Hour<br>Concept Sprint</h3>
+          <p class="work-desc">
+            Led a 48-hour design sprint for a healthcare startup — blank canvas
+            to live, clickable Framer prototype with real data hooks and
+            investor-ready UI. Used Claude for research synthesis; vibe-coded
+            the interactions.
+          </p>
+        </div>
+        <div class="work-kpi-col">
+          <div class="work-kpi">
+            <div class="kpi-label">Key Outcome</div>
+            <div class="kpi-value">$2M</div>
+            <div class="kpi-note">Seed round closed using the prototype as the primary pitch artifact. Zero engineers involved.</div>
+          </div>
+          <div class="work-tools-lbl">Tools Used</div>
+          <div class="work-tools-val">Claude · Framer · Figma · Cursor · Vercel</div>
+        </div>
+      </div>
+
+      <!-- ── Case 04 ── -->
+      <div class="work-item reveal">
+        <div class="work-num">04</div>
+        <div>
+          <div class="work-tags">
+            <span class="work-tag">User Research</span>
+            <span class="work-tag">Strategy</span>
+          </div>
+          <h3 class="work-title">Research<br>at AI Speed</h3>
+          <p class="work-desc">
+            Ran a 3-week generative research program across 28 interviews, using
+            Claude to synthesize themes, generate affinity maps, and produce a
+            40-page insights report — a process that typically takes 3 months.
+          </p>
+        </div>
+        <div class="work-kpi-col">
+          <div class="work-kpi">
+            <div class="kpi-label">Key Outcome</div>
+            <div class="kpi-value">12×</div>
+            <div class="kpi-note">Research synthesis speed vs. traditional methods. Stakeholder alignment achieved in first read-out.</div>
+          </div>
+          <div class="work-tools-lbl">Tools Used</div>
+          <div class="work-tools-val">Claude · Notion · Dovetail · Figma · Miro</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ MARQUEE ══════════════════ -->
+<div class="marquee-wrap" aria-hidden="true">
+  <div class="marquee-track">
+    <span class="marquee-item">Research</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Systems Thinking</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">AI-Native Design</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Vibe Coding</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Design Engineering</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Prototyping</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Design Systems</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Ship It</span><span class="marquee-item marquee-dot">·</span>
+    <!-- duplicate for seamless loop -->
+    <span class="marquee-item">Research</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Systems Thinking</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">AI-Native Design</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Vibe Coding</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Design Engineering</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Prototyping</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Design Systems</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Ship It</span><span class="marquee-item marquee-dot">·</span>
+  </div>
+</div>
+
+<!-- ══════════════════ PROCESS ══════════════════ -->
+<div class="process-wrap" id="process">
+  <div class="process-inner">
+    <div class="eyebrow reveal">04 — Process</div>
+    <h2 class="section-heading reveal d1">How I<br>Work.</h2>
+
+    <div class="process-steps">
+      <div class="process-step reveal">
+        <div class="step-bg-num">01</div>
+        <div class="step-name">Discover</div>
+        <div class="step-desc">User interviews, competitive analysis, stakeholder alignment. Claude synthesizes research faster than any team I've worked with.</div>
+        <span class="step-ai">AI-Augmented</span>
+      </div>
+      <div class="process-step reveal d1">
+        <div class="step-bg-num">02</div>
+        <div class="step-name">Define</div>
+        <div class="step-desc">Personas, jobs-to-be-done, problem framing. I turn raw research into sharp problem statements and north-star metrics.</div>
+      </div>
+      <div class="process-step reveal d2">
+        <div class="step-bg-num">03</div>
+        <div class="step-name">Design</div>
+        <div class="step-desc">Wireframes in Claude. High-fidelity in Figma. Interactive prototypes in Framer. I iterate in hours, not weeks.</div>
+        <span class="step-ai">AI-Augmented</span>
+      </div>
+      <div class="process-step reveal d3">
+        <div class="step-bg-num">04</div>
+        <div class="step-name">Test</div>
+        <div class="step-desc">Moderated usability sessions, A/B experiments, heuristic review. I design the test and synthesize findings with AI.</div>
+        <span class="step-ai">AI-Augmented</span>
+      </div>
+      <div class="process-step reveal d4">
+        <div class="step-bg-num">05</div>
+        <div class="step-name">Ship</div>
+        <div class="step-desc">Design systems, component handoff, vibe-coded prototypes, or full Framer builds. I close the gap between design and production.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ CONTACT ══════════════════ -->
+<div class="contact-wrap" id="contact">
+  <div class="contact-ghost" data-speed="0.08" aria-hidden="true">WORK</div>
+  <div class="contact-inner">
+    <div class="contact-eyebrow reveal">Available for New Projects</div>
+    <h2 class="contact-heading reveal d1">Let's<br>Build.</h2>
+    <a href="mailto:josephpaguirigan@gmail.com" class="contact-email reveal d2">
+      josephpaguirigan@gmail.com
+    </a>
+  </div>
+</div>
+
+<!-- ══════════════════ FOOTER ══════════════════ -->
+<footer>
+  <span class="footer-name">Joseph Paguirigan</span>
+  <span class="footer-note">Design Engineer — 2025</span>
+</footer>
+
+<script>
+/* ────────────────────────────────────────────
+   CURSOR
+──────────────────────────────────────────── */
+const cur     = document.getElementById('cur');
+const curRing = document.getElementById('curRing');
+let mx = 0, my = 0, rx = 0, ry = 0;
+
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cur.style.left = mx + 'px';
+  cur.style.top  = my + 'px';
+});
+
+(function animRing() {
+  rx += (mx - rx) * 0.10;
+  ry += (my - ry) * 0.10;
+  curRing.style.left = rx + 'px';
+  curRing.style.top  = ry + 'px';
+  requestAnimationFrame(animRing);
+})();
+
+/* ────────────────────────────────────────────
+   PROGRESS BAR
+──────────────────────────────────────────── */
+const bar = document.getElementById('progress');
+window.addEventListener('scroll', () => {
+  const pct = window.scrollY / (document.documentElement.scrollHeight - innerHeight) * 100;
+  bar.style.width = pct + '%';
+}, { passive: true });
+
+/* ────────────────────────────────────────────
+   PARALLAX
+──────────────────────────────────────────── */
+const heroTitle  = document.getElementById('heroTitle');
+const pLayers    = document.querySelectorAll('[data-speed]');
+
+window.addEventListener('scroll', () => {
+  const y = window.scrollY;
+  pLayers.forEach(el => {
+    const speed = parseFloat(el.dataset.speed);
+    el.style.transform = `translateY(${y * speed}px)`;
+  });
+}, { passive: true });
+
+/* ────────────────────────────────────────────
+   SCROLL REVEAL
+──────────────────────────────────────────── */
+const revealEls = document.querySelectorAll('.reveal');
+const observer  = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('in');
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.12, rootMargin: '0px 0px -48px 0px' });
+
+revealEls.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
